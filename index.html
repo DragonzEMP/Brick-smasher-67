@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script>window.onerror = function(msg, url, lineNo, columnNo, error) { alert('Error: ' + msg + ' at line ' + lineNo); return false; };</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brick Smasher 67</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <!-- 1. Start Screen -->
+    <div id="start-screen" class="screen active">
+        <div id="high-score-display">High Score: 0</div>
+        <button id="start-btn">START</button>
+        <div id="copyright">© DragonzEMP</div>
+    </div>
+
+    <!-- 2. Main Menu -->
+    <div id="main-menu" class="screen">
+        <div id="menu-high-score">High Score: 0</div>
+        <button id="select-level-btn">Select Level</button>
+        <button id="random-level-btn">Random Level</button>
+        <button id="help-btn">Help (Power-ups)</button>
+        <button id="exit-btn">Exit</button>
+    </div>
+
+    <!-- 3. Level Selector -->
+    <div id="level-selector" class="screen">
+        <h2>Select a Level</h2>
+        <div id="level-grid">
+            <!-- Level buttons (1, 2, 3...) will be generated here by JavaScript -->
+        </div>
+        <div id="pagination-controls" style="display: flex; gap: 20px; justify-content: center; margin-bottom: 20px;">
+            <button id="prev-page-btn" style="width: 120px; padding: 10px;">&lt; Prev</button>
+            <span id="page-indicator" style="align-self: center; font-size: 24px; color: #00ffff; text-shadow: 0 0 10px #00ffff; font-weight: bold;">1 / 4</span>
+            <button id="next-page-btn" style="width: 120px; padding: 10px;">Next &gt;</button>
+        </div>
+        <button id="back-to-menu-btn">Back to Menu</button>
+    </div>
+
+    <!-- 4. Game Screen -->
+    <div id="game-screen" class="screen">
+        <canvas id="gameCanvas"></canvas>
+        <button id="mobile-pause-btn" class="mobile-only">⏸</button>
+        <div id="pause-overlay" class="hidden">
+            <h2>PAUSED</h2>
+            <button id="resume-btn">Resume</button>
+            <div class="volume-control">
+                <label for="volume-slider">Sound Volume:</label>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
+            </div>
+            <button id="exit-pause-btn">Exit to Menu</button>
+        </div>
+    </div>
+
+    <!-- 5. Help Screen -->
+    <div id="help-screen" class="screen">
+        <h1 style="color: #00ffff; margin-bottom: 20px;">POWER-UPS</h1>
+        <div id="help-content" style="display: flex; flex-direction: column; gap: 15px; width: 400px; text-align: left; margin: 0 auto; min-height: 250px;"></div>
+        <div style="margin-top: 20px; display: flex; gap: 20px; justify-content: center;">
+            <button id="help-prev-btn" style="width: 120px; padding: 10px;">&lt; Prev</button>
+            <button id="help-next-btn" style="width: 120px; padding: 10px;">Next &gt;</button>
+        </div>
+        <button id="help-back-btn" style="margin-top: 20px;">Back to Menu</button>
+    </div>
+
+    <script src="levels.js"></script>
+    <script src="icons.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
