@@ -407,22 +407,25 @@ const powerUpRoster = [
 ];
 
 let currentLevel = 1;
-let highScore = 0;
+let highScores = { campaign: 0, endless: 0, timeattack: 0, survival: 0 };
 try {
-    highScore = localStorage.getItem('dexball_highscore') || 0;
+    const savedScores = localStorage.getItem('dexballHighScores');
+    if (savedScores) { 
+        highScores = Object.assign(highScores, JSON.parse(savedScores)); 
+    }
 } catch (e) {
     console.warn("localStorage blocked");
 }
 
 function updateHighScore() {
-    if (score > highScore) {
-        highScore = score;
+    if (score > highScores[currentGameMode]) {
+        highScores[currentGameMode] = score;
         try {
-            localStorage.setItem('dexball_highscore', highScore);
+            localStorage.setItem('dexballHighScores', JSON.stringify(highScores));
         } catch(e) {}
     }
-    document.getElementById('high-score-display').innerText = "High Score: " + highScore;
-    document.getElementById('menu-high-score').innerText = "High Score: " + highScore;
+    document.getElementById('high-score-display').innerText = "High Score: " + highScores[currentGameMode];
+    document.getElementById('menu-high-score').innerText = "High Score: " + highScores[currentGameMode];
 }
 
 const paddle = {
@@ -1346,7 +1349,7 @@ function draw() {
     ctx.fillText("Score: " + score, 20, 30);
     
     ctx.textAlign = 'center';
-    ctx.fillText("High Score: " + highScore, canvas.width / 2, 30);
+    ctx.fillText("High Score: " + highScores[currentGameMode], canvas.width / 2, 30);
     if (currentGameMode === 'timeattack') {
         ctx.fillStyle = '#00ffff';
         ctx.fillText("Time: " + Math.ceil(timeAttackTimer) + "s", canvas.width / 2, 50);
