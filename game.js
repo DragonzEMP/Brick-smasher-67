@@ -17,6 +17,28 @@ const exitBtn = document.getElementById('exit-btn');
 const backToMenuBtn = document.getElementById('back-to-menu-btn');
 const levelGrid = document.getElementById('level-grid');
 
+
+// Custom Popup Logic
+let popupCallback = null;
+
+function showPopup(title, message, callback) {
+    document.getElementById('custom-popup-title').innerText = title;
+    document.getElementById('custom-popup-message').innerText = message;
+    popupCallback = callback;
+    document.getElementById('custom-popup-overlay').classList.remove('hidden');
+    isPaused = true;
+}
+
+
+    document.getElementById('custom-popup-btn').addEventListener('click', () => {
+        document.getElementById('custom-popup-overlay').classList.add('hidden');
+        if (popupCallback) {
+            let cb = popupCallback;
+            popupCallback = null;
+            cb();
+        }
+});
+
 // Helper function to switch screens
 function showScreen(screenToShow) {
     // Hide all screens
@@ -913,11 +935,13 @@ function update() {
         paddle.isFireball = false;
         paddle.isGravityPull = false;
         if(lives === 0) {
-            isGameRunning = false;
-            cancelAnimationFrame(gameLoopId);
-            updateHighScore();
-            alert("Game Over!");
-            showScreen(mainMenu);
+            showPopup("GAME OVER", "You ran out of lives. Final Score: " + score, () => {
+                isGameRunning = false;
+                isPaused = false;
+                updateHighScore();
+                showScreen(mainMenu);
+                if (typeof startMenuMusic === 'function') startMenuMusic();
+            });
             return false;
         } else {
             // Reset ball and paddle
@@ -1115,28 +1139,33 @@ function update() {
                         paddle.isGravityPull = false;
                         grabbedBalls = [];
                     } else {
-                        isGameRunning = false;
-                        cancelAnimationFrame(gameLoopId);
-                        updateHighScore();
-                        alert("Game Over!");
-                        showScreen(mainMenu);
+                        showPopup("GAME OVER", "You ran out of lives. Final Score: " + score, () => {
+                            isGameRunning = false;
+                            isPaused = false;
+                            updateHighScore();
+                            showScreen(mainMenu);
+                            if (typeof startMenuMusic === 'function') startMenuMusic();
+                        });
                         return false;
                     }
                     break;
                 case 'warp':
-                    alert("Level Warp!");
-                    currentLevel++;
-                    if (currentLevel > totalLevels) {
-                        updateHighScore();
-                        alert("Congratulations! You beat the game with a score of " + score);
-                        isGameRunning = false;
-                        cancelAnimationFrame(gameLoopId);
-                        showScreen(mainMenu);
-                        return false; // Stop the loop
-                    } else {
-                        loadLevel(currentLevel);
-                        return true;
-                    }
+                    showPopup("WARP ZONE", "Skipping to the next level!", () => {
+                        currentLevel++;
+                        if (currentLevel > totalLevels) {
+                            showPopup("VICTORY", "Congratulations! You beat the game with a score of " + score, () => {
+                                isGameRunning = false;
+                                isPaused = false;
+                                updateHighScore();
+                                showScreen(mainMenu);
+                                if (typeof startMenuMusic === 'function') startMenuMusic();
+                            });
+                        } else {
+                            loadLevel(currentLevel);
+                            isPaused = false;
+                        }
+                    });
+                    return true;
             }
             
             powerUps.splice(i, 1);
@@ -1148,18 +1177,22 @@ function update() {
 
     // Win condition check (ignoring indestructible bricks)
     if (activeBricksCount === 0) {
-        alert("Level " + currentLevel + " Complete!");
-        currentLevel++;
-        if (currentLevel > totalLevels) {
-            updateHighScore();
-            alert("Congratulations! You beat the game with a score of " + score);
-            isGameRunning = false;
-            cancelAnimationFrame(gameLoopId);
-            showScreen(mainMenu);
-            return false; // Stop the loop
-        } else {
-            loadLevel(currentLevel);
-        }
+        showPopup("LEVEL CLEARED", "Level " + currentLevel + " Complete!", () => {
+            currentLevel++;
+            if (currentLevel > totalLevels) {
+                showPopup("VICTORY", "Congratulations! You beat the game with a score of " + score, () => {
+                    isGameRunning = false;
+                    isPaused = false;
+                    updateHighScore();
+                    showScreen(mainMenu);
+                    if (typeof startMenuMusic === 'function') startMenuMusic();
+                });
+            } else {
+                loadLevel(currentLevel);
+                isPaused = false;
+            }
+        });
+        return false; // Stop current frame immediately
     }
     
     return true; // Continue the loop
