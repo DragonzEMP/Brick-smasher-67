@@ -1424,10 +1424,5 @@ function startGame(levelNumber) {
     }
 }
 
-randomLevelBtn.addEventListener('click', () => {
-    const randomLevel = Math.floor(Math.random() * totalLevels) + 1;
-    startGame(randomLevel);
-});
-
 // Initialize UI
 updateHighScore();
