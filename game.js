@@ -1,3 +1,8 @@
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const baseSpeedX = isMobileDevice ? 2.5 : 5;
+const baseSpeedY = isMobileDevice ? -2.5 : -5;
+const baseSpeedMultiplier = isMobileDevice ? 0.5 : 1;
+
 // Screen elements
 const startScreen = document.getElementById('start-screen');
 const mainMenu = document.getElementById('main-menu');
@@ -444,8 +449,8 @@ canvas.addEventListener('touchstart', (e) => {
     if (paddle.isMagnetic && grabbedBalls.length > 0) {
         for (let i = 0; i < grabbedBalls.length; i++) {
             let b = grabbedBalls[i];
-            b.speedY = -5;
-            b.speedX = (b.grabOffsetX - paddle.width / 2) / (paddle.width / 2) * 4;
+            b.speedY = baseSpeedY;
+            b.speedX = (b.grabOffsetX - paddle.width / 2) / (paddle.width / 2) * (4 * baseSpeedMultiplier);
             if (b.speedX === 0) b.speedX = (Math.random() - 0.5); // Prevent fully vertical bounce lock
             balls.push(b);
         }
@@ -467,8 +472,8 @@ function keyDownHandler(e) {
         if (paddle.isMagnetic && grabbedBalls.length > 0) {
             for (let i = 0; i < grabbedBalls.length; i++) {
                 let b = grabbedBalls[i];
-                b.speedY = -5;
-                b.speedX = (b.grabOffsetX - paddle.width / 2) / (paddle.width / 2) * 4;
+                b.speedY = baseSpeedY;
+                b.speedX = (b.grabOffsetX - paddle.width / 2) / (paddle.width / 2) * (4 * baseSpeedMultiplier);
                 if (b.speedX === 0) b.speedX = (Math.random() - 0.5); // Prevent fully vertical bounce lock
                 balls.push(b);
             }
@@ -916,7 +921,7 @@ function update() {
             return false;
         } else {
             // Reset ball and paddle
-            balls = [{ x: canvas.width/2, y: canvas.height-50, radius: 8, speedX: 5, speedY: -5, color: '#00ffff', isPiercing: false }];
+            balls = [{ x: canvas.width/2, y: canvas.height-50, radius: 8, speedX: baseSpeedX, speedY: baseSpeedY, color: '#00ffff', isPiercing: false }];
             paddle.x = (canvas.width - paddle.width) / 2;
         }
     }
@@ -975,7 +980,7 @@ function update() {
                             y: balls[j].y,
                             radius: balls[j].radius,
                             speedX: -balls[j].speedX,
-                            speedY: balls[j].speedY - 1,
+                            speedY: balls[j].speedY - (1 * baseSpeedMultiplier),
                             color: balls[j].color,
                             isPiercing: balls[j].isPiercing
                         });
@@ -1010,8 +1015,8 @@ function update() {
                                 x: ob.x,
                                 y: ob.y,
                                 radius: ob.radius,
-                                speedX: spreads[s][0],
-                                speedY: spreads[s][1],
+                                speedX: spreads[s][0] * baseSpeedMultiplier,
+                                speedY: spreads[s][1] * baseSpeedMultiplier,
                                 color: ob.color,
                                 isPiercing: ob.isPiercing,
                                 isShrunk: ob.isShrunk
@@ -1099,7 +1104,7 @@ function update() {
                     lives--;
                     playSound('drop');
                     if (lives > 0) {
-                        balls = [{ x: canvas.width/2, y: canvas.height-50, radius: 8, speedX: 5, speedY: -5, color: '#00ffff', isPiercing: false }];
+                        balls = [{ x: canvas.width/2, y: canvas.height-50, radius: 8, speedX: baseSpeedX, speedY: baseSpeedY, color: '#00ffff', isPiercing: false }];
                         paddle.x = (canvas.width - paddle.width) / 2;
                         scoreMultiplier = 1;
                         timeSlowTimer = 0;
@@ -1235,7 +1240,7 @@ function gameLoop() {
 function loadLevel(levelNumber) {
     currentLevel = levelNumber;
     
-    balls = [{ x: canvas.width/2, y: canvas.height-50, radius: 8, speedX: 5, speedY: -5, color: '#00ffff', isPiercing: false }];
+    balls = [{ x: canvas.width/2, y: canvas.height-50, radius: 8, speedX: baseSpeedX, speedY: baseSpeedY, color: '#00ffff', isPiercing: false }];
     lasers = [];
     grabbedBalls = [];
     scoreMultiplier = 1;
