@@ -3,6 +3,12 @@ const baseSpeedX = isMobileDevice ? 2.5 : 5;
 const baseSpeedY = isMobileDevice ? -2.5 : -5;
 const baseSpeedMultiplier = isMobileDevice ? 0.5 : 1;
 
+// Mode state
+let currentGameMode = 'campaign';
+let timeAttackTimer = 0;
+let endlessDropTimer = 0;
+let lastFrameTime = 0;
+
 // Screen elements
 const startScreen = document.getElementById('start-screen');
 const mainMenu = document.getElementById('main-menu');
@@ -11,8 +17,10 @@ const gameScreen = document.getElementById('game-screen');
 
 // Button elements
 const startBtn = document.getElementById('start-btn');
-const selectLevelBtn = document.getElementById('select-level-btn');
-const randomLevelBtn = document.getElementById('random-level-btn');
+const btnCampaign = document.getElementById('btn-campaign');
+const btnEndless = document.getElementById('btn-endless');
+const btnTimeAttack = document.getElementById('btn-timeattack');
+const btnSurvival = document.getElementById('btn-survival');
 const exitBtn = document.getElementById('exit-btn');
 const backToMenuBtn = document.getElementById('back-to-menu-btn');
 const levelGrid = document.getElementById('level-grid');
@@ -59,7 +67,22 @@ function showScreen(screenToShow) {
 
 // Event Listeners for Menus
 startBtn.addEventListener('click', () => showScreen(mainMenu));
-selectLevelBtn.addEventListener('click', () => showScreen(levelSelector));
+btnCampaign.addEventListener('click', () => {
+    currentGameMode = 'campaign';
+    showScreen(levelSelector);
+});
+btnEndless.addEventListener('click', () => {
+    currentGameMode = 'endless';
+    startGame(1);
+});
+btnTimeAttack.addEventListener('click', () => {
+    currentGameMode = 'timeattack';
+    startGame(1);
+});
+btnSurvival.addEventListener('click', () => {
+    currentGameMode = 'survival';
+    startGame(1);
+});
 backToMenuBtn.addEventListener('click', () => showScreen(mainMenu));
 
 exitBtn.addEventListener('click', () => {
@@ -541,10 +564,42 @@ const brickConfig = {
 // 2. Create a 2D array to store the active level layout
 let bricks = [];
 
+
+function generateRandomRow() {
+    let row = [];
+    for (let i = 0; i < 15; i++) {
+        let rand = Math.random();
+        if (rand < 0.1) row.push(0); // 10% empty
+        else if (rand < 0.2) row.push(3); // 10% indestructible
+        else if (rand < 0.6) row.push(2); // 40% power-up
+        else row.push(1); // 40% standard
+    }
+    // Ensure the outer edges aren't solidly blocked by 3s
+    if (row[0] === 3) row[0] = 1;
+    if (row[14] === 3) row[14] = 1;
+    return row;
+}
+
+function generateRandomBoard(rowCount) {
+    let board = [];
+    for (let i = 0; i < rowCount; i++) {
+        board.push(generateRandomRow());
+    }
+    // Ensure at least the bottom 3 rows of the board are strictly 0 (empty)
+    board.push(new Array(15).fill(0));
+    board.push(new Array(15).fill(0));
+    board.push(new Array(15).fill(0));
+    return board;
+}
+
 function initBricks(levelNumber) {
-    // If levelNumber exceeds our defined layouts, wrap around
-    const layoutIndex = (levelNumber - 1) % levelLayouts.length;
-    const layout = levelLayouts[layoutIndex];
+    let layout;
+    if (currentGameMode === 'endless' || currentGameMode === 'timeattack') {
+        layout = generateRandomBoard(8);
+    } else {
+        const layoutIndex = (levelNumber - 1) % levelLayouts.length;
+        layout = levelLayouts[layoutIndex];
+    }
     
     brickConfig.columnCount = layout[0].length;
     brickConfig.rowCount = layout.length;
@@ -1306,7 +1361,7 @@ function startGame(levelNumber) {
         
         // Reset game state
         score = 0;
-        lives = 3;
+        lives = (currentGameMode === 'survival') ? 1 : 3;
         isGameRunning = true;
         
         loadLevel(levelNumber);
