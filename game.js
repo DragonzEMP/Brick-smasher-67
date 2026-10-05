@@ -617,7 +617,9 @@ function initBricks(levelNumber) {
 }
 
 function spawnPowerUp(brickX, brickY) {
-    const selectedUp = powerUpRoster[Math.floor(Math.random() * powerUpRoster.length)];
+    let availablePowerUps = powerUpRoster;
+    if (currentGameMode === 'survival') availablePowerUps = powerUpRoster.filter(p => p.id !== 'life');
+    const selectedUp = availablePowerUps[Math.floor(Math.random() * availablePowerUps.length)];
     powerUps.push({
         x: brickX + brickConfig.width / 2,
         y: brickY + brickConfig.height / 2,
@@ -809,6 +811,41 @@ function drawPaddle() {
 
 function update() {
     if (!isGameRunning) return false;
+
+    if (currentGameMode === 'timeattack') {
+        timeAttackTimer -= 1/60;
+        if (timeAttackTimer <= 0) {
+            showPopup("TIME UP", "You ran out of time! Final Score: " + score, () => { isGameRunning = false; isPaused = false; updateHighScore(); showScreen(mainMenu); if (typeof startMenuMusic === 'function') startMenuMusic(); });
+            return false;
+        }
+    }
+
+    if (currentGameMode === 'endless') {
+        endlessDropTimer--;
+        if (endlessDropTimer <= 0) {
+            endlessDropTimer = 900; // Reset to 15 seconds
+            for (let r = brickConfig.rowCount - 1; r > 0; r--) {
+                for (let c = 0; c < brickConfig.columnCount; c++) {
+                    bricks[r][c] = bricks[r-1][c];
+                }
+            }
+            bricks[0] = generateRandomRow(); // Spawn new row
+            playSound('drop');
+        }
+        // Check for bottom collision (Death condition)
+        const bottomBrickY = ((brickConfig.rowCount - 1) * (brickConfig.height + brickConfig.padding)) + brickConfig.offsetTop + brickConfig.height;
+        if (bottomBrickY >= canvas.height - paddle.height - 10) {
+            // Verify if any active bricks actually exist in the bottom row
+            let hasActiveBricks = false;
+            for (let c = 0; c < brickConfig.columnCount; c++) {
+                if (bricks[brickConfig.rowCount - 1][c] > 0) hasActiveBricks = true;
+            }
+            if (hasActiveBricks) {
+                showPopup("CRUSHED", "The bricks reached the bottom! Final Score: " + score, () => { isGameRunning = false; isPaused = false; updateHighScore(); showScreen(mainMenu); if (typeof startMenuMusic === 'function') startMenuMusic(); });
+                return false;
+            }
+        }
+    }
 
     if (timeSlowTimer > 0) timeSlowTimer--;
     if (timeStopTimer > 0) timeStopTimer--;
@@ -1232,21 +1269,25 @@ function update() {
 
     // Win condition check (ignoring indestructible bricks)
     if (activeBricksCount === 0) {
-        showPopup("LEVEL CLEARED", "Level " + currentLevel + " Complete!", () => {
-            currentLevel++;
-            if (currentLevel > totalLevels) {
-                showPopup("VICTORY", "Congratulations! You beat the game with a score of " + score, () => {
-                    isGameRunning = false;
-                    isPaused = false;
-                    updateHighScore();
-                    showScreen(mainMenu);
-                    if (typeof startMenuMusic === 'function') startMenuMusic();
-                });
-            } else {
-                loadLevel(currentLevel);
-                isPaused = false;
-            }
-        });
+        if (currentGameMode === 'timeattack') {
+            timeAttackTimer += 180; // Add 3 minutes to saved time
+            showPopup("BOARD CLEARED", "+3 MINUTES EXTENSION!", () => { currentLevel++; loadLevel(currentLevel); isPaused = false; });
+        } else if (currentGameMode === 'endless') {
+            showPopup("BOARD CLEARED", "Board reset!", () => { currentLevel++; loadLevel(currentLevel); isPaused = false; });
+        } else {
+            showPopup("LEVEL CLEARED", "Level " + currentLevel + " Complete!", () => {
+                currentLevel++;
+                if (currentGameMode === 'survival') {
+                    // Increase baseline ball speed by 5% each level
+                    balls.forEach(b => { b.speedX *= 1.05; b.speedY *= 1.05; });
+                }
+                if (currentLevel > totalLevels) {
+                    showPopup("VICTORY", "Congratulations! Final Score: " + score, () => { isGameRunning = false; isPaused = false; updateHighScore(); showScreen(mainMenu); if (typeof startMenuMusic === 'function') startMenuMusic(); });
+                } else {
+                    loadLevel(currentLevel); isPaused = false;
+                }
+            });
+        }
         return false; // Stop current frame immediately
     }
     
@@ -1306,7 +1347,12 @@ function draw() {
     
     ctx.textAlign = 'center';
     ctx.fillText("High Score: " + highScore, canvas.width / 2, 30);
+    if (currentGameMode === 'timeattack') {
+        ctx.fillStyle = '#00ffff';
+        ctx.fillText("Time: " + Math.ceil(timeAttackTimer) + "s", canvas.width / 2, 50);
+    }
     
+    ctx.fillStyle = '#ff0077';
     ctx.textAlign = 'right';
     ctx.fillText("Lives: " + lives, canvas.width - 20, 30);
     ctx.textAlign = 'left';
@@ -1360,6 +1406,8 @@ function startGame(levelNumber) {
         }
         
         // Reset game state
+        if (currentGameMode === 'timeattack') timeAttackTimer = 180; // 3 minutes in seconds
+        if (currentGameMode === 'endless') endlessDropTimer = 900; // 15 seconds at 60fps
         score = 0;
         lives = (currentGameMode === 'survival') ? 1 : 3;
         isGameRunning = true;
