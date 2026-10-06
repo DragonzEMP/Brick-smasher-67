@@ -574,8 +574,8 @@ function generateRandomRow() {
         let rand = Math.random();
         if (rand < 0.1) row.push(0); // 10% empty
         else if (rand < 0.2) row.push(3); // 10% indestructible
-        else if (rand < 0.6) row.push(2); // 40% power-up
-        else row.push(1); // 40% standard
+        else if (rand < 0.35) row.push(2); // 15% power-up
+        else row.push(1); // 65% standard
     }
     // Ensure the outer edges aren't solidly blocked by 3s
     if (row[0] === 3) row[0] = 1;
