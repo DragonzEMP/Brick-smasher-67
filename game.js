@@ -1273,8 +1273,9 @@ function update() {
     // Win condition check (ignoring indestructible bricks)
     if (activeBricksCount === 0) {
         if (currentGameMode === 'timeattack') {
-            timeAttackTimer += 180; // Add 3 minutes to saved time
-            showPopup("BOARD CLEARED", "+3 MINUTES EXTENSION!", () => { currentLevel++; loadLevel(currentLevel); isPaused = false; });
+            let savedTime = Math.ceil(timeAttackTimer);
+            timeAttackTimer += 180;
+            showPopup("BOARD CLEARED", "Saved Time: " + savedTime + "s\n+ 3 Minutes Added!\nNew Starting Time: " + Math.ceil(timeAttackTimer) + "s", () => { currentLevel++; loadLevel(currentLevel); isPaused = false; });
         } else if (currentGameMode === 'endless') {
             showPopup("BOARD CLEARED", "Board reset!", () => { currentLevel++; loadLevel(currentLevel); isPaused = false; });
         } else {
